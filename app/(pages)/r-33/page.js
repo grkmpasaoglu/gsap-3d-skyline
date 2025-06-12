@@ -4,11 +4,48 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import gsap from "gsap";
+import { motion } from "framer-motion"; // eklendi
 
 // Model bileşeni sadece modeli yükler ve referansını dışarıdan alır
 function Model({ modelRef, scale }) {
   const { scene } = useGLTF("/models/r-33/scene.gltf");
-  return <primitive ref={modelRef} object={scene} />;
+  return (
+    <motion.primitive
+      ref={modelRef}
+      object={scene}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2, ease: "easeOut" }}
+    />
+  );
+}
+
+// Spinner bileşeni
+function Spinner() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+      <svg
+        className="animate-spin h-16 w-16 text-purple-400"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        />
+      </svg>
+    </div>
+  );
 }
 
 // Model ve kamera pozisyon/rotation ayarları Canvas içinde yapılmalı
@@ -61,9 +98,8 @@ function SceneContent({ cameraScroll, modelScale }) {
     <>
       <ambientLight intensity={0.5} />
       <Environment preset="sunset" background={false} />
-      <Suspense fallback={null}>
-        <Model modelRef={modelRef} scale={modelScale} />
-      </Suspense>
+      {/* Suspense kaldırıldı, Model doğrudan render ediliyor */}
+      <Model modelRef={modelRef} scale={modelScale} />
       <OrbitControls
         enableZoom={false}
         enablePan={false}
@@ -76,18 +112,20 @@ function SceneContent({ cameraScroll, modelScale }) {
 // Scene3D sadece Canvas'ı ve içeriğini render eder
 function Scene3D({ cameraScroll, modelScale, lightIntensity }) {
   return (
-    <Canvas
-      camera={{
-        position: [1.0, 0.1, 6.0],
-        fov: 33,
-      }}
-      style={{
-        background:
-          "linear-gradient(135deg, #181818 0%, #232946 40%, #394867 100%)",
-      }}
-    >
-      <SceneContent cameraScroll={cameraScroll} modelScale={modelScale} />
-    </Canvas>
+    <Suspense fallback={<Spinner />}>
+      <Canvas
+        camera={{
+          position: [1.0, 0.1, 6.0],
+          fov: 33,
+        }}
+        style={{
+          background:
+            "linear-gradient(135deg, #181818 0%, #232946 40%, #394867 100%)",
+        }}
+      >
+        <SceneContent cameraScroll={cameraScroll} modelScale={modelScale} />
+      </Canvas>
+    </Suspense>
   );
 }
 
